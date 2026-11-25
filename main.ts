@@ -28,17 +28,29 @@ const LINE =
 // Gate: /output/entry.txt must be UTF-8 text of 1 to 140 characters,
 // counted as Unicode code points, and not only white space. It must
 // also stay exactly one line: any newline would break the one-liner.
-const length = [...LINE].length;
-if (length < 1 || length > 140 || LINE.trim().length === 0) {
-  throw new Error(`entry is ${length} code points, outside the 1-140 gate`);
-}
-if (LINE.includes("\n") || LINE.includes("\r")) {
-  throw new Error("entry must be a single line");
+function assertValidLine(line: string): number {
+  const length = [...line].length;
+  if (length < 1 || length > 140 || line.trim().length === 0) {
+    throw new Error(`entry is ${length} code points, outside the 1-140 gate`);
+  }
+  if (line.includes("\n") || line.includes("\r")) {
+    throw new Error("entry must be a single line");
+  }
+  return length;
 }
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(path.join(outDir, "entry.txt"), LINE, "utf8");
+const length = assertValidLine(LINE);
+
+function resolveOutDir(): string {
+  return process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+}
+
+function outputPath(): string {
+  return path.join(resolveOutDir(), "entry.txt");
+}
+
+fs.mkdirSync(resolveOutDir(), { recursive: true });
+fs.writeFileSync(outputPath(), LINE, "utf8");
 
 console.log(LINE);
 console.log(`(${length} code points, ${Buffer.byteLength(LINE, "utf8")} bytes)`);
